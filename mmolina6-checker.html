@@ -1,0 +1,269 @@
+<!-
+  Name: Maria Alejandra Molina
+  Date: 01/31/2022
+  CSC 4181
+->
+<html>
+<head>
+<title>Checker</title>
+<script type="text/javascript">
+
+var currentToken; 
+var tokens; 
+
+function check()
+{
+	clear_results(); 
+	var text = document.getElementById("text").value;
+	
+	text = text.replaceAll("+", " + ");
+	text = text.replaceAll("-", " - ");
+	text = text.replaceAll("*", " * ");
+	text = text.replaceAll("/", " / ");
+	text = text.replaceAll("(", " ( ");
+	text = text.replaceAll(")", " ) ");
+	
+	text = text.replace(/\s\s+/g, ' ');
+	text = text.replace(/^\s*/, "").replace(/\s*$/, "");
+	
+	document.getElementById("text").value = text;
+	
+	tokens = text.split(/\s+/);
+	
+    currentToken = 0;
+	var leftParens = 0; 
+	var rightParens = 0; 
+
+	while(currentToken < tokens.length)
+	{
+		if (tokens[currentToken] == '(')
+			leftParens++; 
+		if (tokens[currentToken] == ')')
+			rightParens++;
+       
+        if (!isValidToken()) 
+        { 
+            append_result("Error: Token is not valid. Token " + (currentToken+1) + " is " + tokens[currentToken] + "."); 
+        }
+        
+		currentToken++; 
+	}
+
+	if (leftParens != rightParens)
+	{ 
+		append_result("Error: Mismatched parenthesis, Left:" + leftParens +", Right:" + rightParens); 
+	}
+    
+	currentToken=0; 
+	console.log('total tokens,', tokens.length); 
+    
+    var result = isExp(); 
+	if (currentToken != tokens.length || !result)
+	{ 
+		append_result("Parsing error at token " + (currentToken+1) + ": " + tokens[currentToken]); 
+		append_result("Reject");
+
+        if (isDoubleOperator()) { 
+                append_result("Error: Can't have two operators in a row: Token " + (currentToken+1) + " is " + tokens[currentToken] + ".");
+            }
+
+            if (missingOperand()) {
+                append_result("Error: Entry could be missing an operand: Token " + (currentToken+1) + " is " + tokens[currentToken] + ".");
+            }
+            }
+	else 
+	{ 
+		append_result("Accept"); 
+	}
+
+	console.log('current token', currentToken); 
+}
+
+function do_something_with_token(i, token)
+{
+	append_result("token " + currentToken + ": " + tokens[currentToken] + " name: " + tokenName() + "\n");
+}
+
+function tokenName() { 
+	if (isAddOp())
+		return "addop";
+	if (isMulOp())
+		return "mulop";
+	if (isLeftParen())
+		return "leftParen";
+	if (isRightParen())
+		return "rightParen";
+	if (isNumber())
+		return "number";
+	else
+		return tokens[currentToken];
+}
+
+function missingOperand() 
+{ 
+    var oldCurrentToken = currentToken; 
+    var missOperand = false; 
+
+    for(i=0; i<tokens.length; i++) { 
+        if  (isAddOp() || isMulOp()) { 
+            missOperand = true;
+        }
+    }
+
+    currentToken = oldCurrentToken; 
+    return missOperand; 
+}
+
+function isDoubleOperator()
+ {  
+    var oldCurrentToken = currentToken; 
+    var hasTwoOperators = false; 
+
+    if (isAddOp() || isMulOp()) 
+    { 
+        if (isAddOp() || isMulOp())
+            hasTwoOperators = true; 
+    }
+
+    currentToken = oldCurrentToken; 
+    return hasTwoOperators; 
+}
+
+function isValidToken() 
+{ 
+    var oldCurrentToken = currentToken;
+
+    var name = tokenName(); 
+   
+    currentToken = oldCurrentToken; 
+
+    return name != tokens[currentToken]; 
+
+}
+
+function isExp()
+{
+	var oldCurrentToken = currentToken; 
+
+	if (isTerm() && isAddOp() && isExp())
+		return true;
+	
+	currentToken = oldCurrentToken; 
+
+	if (isTerm())
+		return true; 
+	
+	currentToken = oldCurrentToken; 
+
+	return false;
+}
+
+function isTerm()
+{ 
+	var oldCurrentToken = currentToken; 
+
+	if (isFactor() && isMulOp() && isTerm())
+		return true; 
+
+	currentToken = oldCurrentToken;
+
+	if (isFactor())
+		return true; 
+	
+	currentToken = oldCurrentToken; 
+
+	return false; 
+}
+
+function isFactor() 
+{ 
+	var oldCurrentToken = currentToken;
+
+	if (isLeftParen() && isExp() && isRightParen())
+		return true; 
+	
+	currentToken = oldCurrentToken; 
+
+	if (isNumber())
+		return true; 
+	
+	currentToken = oldCurrentToken; 
+
+	return false; 
+}
+
+function isAddOp() 
+{ 
+	if(tokens[currentToken] == '+' || tokens[currentToken] == '-') 
+	{ 
+		currentToken++; 
+		return true; 
+	}
+	return false; 
+}
+function isMulOp() 
+{ 
+	if(tokens[currentToken] == '*' || tokens[currentToken] == '/')
+	{ 
+		currentToken++;
+		return true; 
+	}
+	return false; 
+}
+function isLeftParen() 
+{ 
+	if(tokens[currentToken] == '(') 
+	{ 
+		currentToken++; 
+		return true; 
+	}
+	return false; 
+}
+function isRightParen() 
+{ 
+	if(tokens[currentToken] == ')')
+	{ 
+		currentToken++;
+		return true;
+	}
+	return false; 
+}
+function isNumber() 
+{ 
+	 if(!isNaN(tokens[currentToken]))
+	 { 
+		currentToken++; 
+		return true; 
+	 }
+	 return false;
+}
+
+function append_result(token)
+{
+	document.getElementById("results").value += token + '\n';
+}
+
+function clear_results()
+{
+	document.resultform.reset();
+}
+
+</script>
+</head>
+<body bgcolor="#B8E2F2">
+<h1>Checker</h1>
+<p>Copy and paste, or type, some text to be checked below and click "Check". </p>
+<form name="checker" action="javascript:check()">
+	<p><textarea rows="9" id="text" name="text" cols="99"></textarea><br>
+	<input type="submit" value="Check" name="">
+	<input type="reset" value="Reset" name="" onclick="javascript:clear_results()"></p>
+</form>
+<h2>Result</h2>
+<form name="resultform">
+	<p><textarea rows="10" id="results" name="results" cols="99" readonly="readonly"></textarea></p>
+</form>
+<p>&nbsp;</p>
+</body>
+</html><!-- 1-04-23 -->
+
+
